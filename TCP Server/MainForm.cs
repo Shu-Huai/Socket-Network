@@ -192,8 +192,7 @@ namespace TCP_Server
                 IPCombo.SelectedIndex = 0;
             }
         }
-
-        private void Closing(object sender, FormClosingEventArgs e)
+        private new void Closing(object sender, FormClosingEventArgs e)
         {
             foreach (Socket item in sendSockets_)
             {
