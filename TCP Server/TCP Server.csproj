@@ -5,6 +5,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>TCP_Server</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>TCP Server.ico</ApplicationIcon>
   </PropertyGroup>
 
 </Project>

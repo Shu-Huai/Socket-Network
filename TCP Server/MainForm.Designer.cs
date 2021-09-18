@@ -29,6 +29,7 @@ namespace TCP_Server
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.IPCombo = new System.Windows.Forms.ComboBox();
             this.beginButton = new System.Windows.Forms.Button();
             this.logEditor = new System.Windows.Forms.TextBox();
@@ -134,6 +135,7 @@ namespace TCP_Server
             this.Controls.Add(this.logEditor);
             this.Controls.Add(this.portEditor);
             this.Controls.Add(this.IPEditor);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "服务端";

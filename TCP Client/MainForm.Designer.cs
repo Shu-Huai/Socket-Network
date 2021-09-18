@@ -29,6 +29,7 @@ namespace TCP_Client
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.messageEditor = new System.Windows.Forms.TextBox();
             this.logEditor = new System.Windows.Forms.TextBox();
             this.portEditor = new System.Windows.Forms.TextBox();
@@ -168,6 +169,7 @@ namespace TCP_Client
             this.Controls.Add(this.sendButton);
             this.Controls.Add(this.connectButton);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "客户端";
