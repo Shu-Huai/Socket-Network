@@ -192,5 +192,16 @@ namespace TCP_Server
                 IPCombo.SelectedIndex = 0;
             }
         }
+
+        private void Closing(object sender, FormClosingEventArgs e)
+        {
+            foreach (Socket item in sendSockets_)
+            {
+                byte[] buffer = new byte[1];
+                buffer[0] = 3;
+                item.Send(buffer);
+                item.Close();
+            }
+        }
     }
 }

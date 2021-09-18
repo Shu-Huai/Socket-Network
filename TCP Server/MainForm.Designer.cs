@@ -137,6 +137,7 @@ namespace TCP_Server
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "服务端";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
