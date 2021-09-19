@@ -6,13 +6,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-namespace TCP_Server
+
+namespace UDP_Server
 {
     public partial class MainForm : Form
     {
         public bool IsBegin { get; set; }
         private bool m_isFromLocal;
         private readonly List<Socket> sendSockets_;
+        private Socket m_socket;
         public MainForm()
         {
             InitializeComponent();
@@ -24,23 +26,22 @@ namespace TCP_Server
         {
             logEditor.AppendText(log + Environment.NewLine);
         }
-        private void Receive(object o)
+        private void Receive()
         {
-            int index = (int)o;
-            Socket temp = sendSockets_[index];
             int size;
             do
             {
                 try
                 {
                     byte[] buffer = new byte[1024 * 1024];
-                    size = temp.Receive(buffer);
+                    EndPoint point = new IPEndPoint(IPAddress.Any, 0);
+                    size = m_socket.ReceiveFrom(buffer, ref point);
                     switch (buffer[0])
                     {
                         case 0:
                             if (!m_isFromLocal)
                             {
-                                ShowLog(temp.RemoteEndPoint + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
+                                ShowLog(point + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
                             }
                             break;
                         case 1:
@@ -62,24 +63,27 @@ namespace TCP_Server
                             if (package.Split('\0')[0] == "lvzhi" && package.Split('\0')[1] == "prwq0421")
                             {
                                 information[1] = 1;
-                                ShowLog(temp.RemoteEndPoint + "：登陆成功。");
+                                ShowLog(point + "：登录成功。");
+                                IPCombo.Items.Add(point.ToString());
+                                IPCombo.SelectedIndex = IPCombo.Items.Count - 1;
                             }
                             else
                             {
                                 information[1] = 0;
-                                ShowLog(temp.RemoteEndPoint + "：用户名或密码错误。");
+                                ShowLog(point + "：用户名或密码错误。");
                             }
-                            sendSockets_[index].Send(information);
+                            m_socket.SendTo(information, point);
                             break;
                         case 3:
-                            ShowLog(temp.RemoteEndPoint + "：断开连接。");
-                            sendSockets_.RemoveAt(index);
-                            if (IPCombo.SelectedItem.ToString() == temp.RemoteEndPoint.ToString())
+                            if (!m_isFromLocal)
                             {
-                                IPCombo.SelectedIndex--;
+                                ShowLog(point + "：断开连接。");
+                                if (IPCombo.Items.Count != 0 && IPCombo.SelectedItem.ToString() == point.ToString())
+                                {
+                                    IPCombo.SelectedIndex--;
+                                }
+                                IPCombo.Items.Remove(point.ToString());
                             }
-                            IPCombo.Items.Remove(temp.RemoteEndPoint.ToString());
-                            temp.Close();
                             return;
                         default:
                             break;
@@ -89,30 +93,7 @@ namespace TCP_Server
                 {
                     size = 0;
                 }
-            } while (size != 0);
-        }
-        void Watch(object o)
-        {
-            Socket watchSocket = o as Socket;
-            while (IsBegin)
-            {
-                Socket receive = watchSocket.Accept();
-                if (!m_isFromLocal)
-                {
-                    sendSockets_.Add(receive);
-                    IPCombo.Items.Add(sendSockets_[^1].RemoteEndPoint.ToString());
-                    if (IPCombo.SelectedIndex == -1)
-                    {
-                        IPCombo.SelectedIndex = 0;
-                    }
-                    ShowLog($"收到连接：{sendSockets_[^1].RemoteEndPoint}。");
-                    Thread thread = new(Receive);
-                    thread.IsBackground = true;
-                    thread.Start(sendSockets_.Count - 1);
-                }
-            }
-            m_isFromLocal = false;
-            watchSocket.Close();
+            } while (size != 0 && IsBegin);
         }
         private void BeginWatch(object sender, EventArgs e)
         {
@@ -133,13 +114,12 @@ namespace TCP_Server
             {
                 try
                 {
-                    Socket watchSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    watchSocket.Bind(port);
+                    m_socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    m_socket.Bind(port);
                     IsBegin = true;
-                    watchSocket.Listen(10);
-                    Thread thread = new(Watch);
+                    Thread thread = new(Receive);
                     thread.IsBackground = true;
-                    thread.Start(watchSocket);
+                    thread.Start();
                     beginButton.Text = "停止监听";
                     ShowLog($"开始监听：{port}。");
                 }
@@ -151,18 +131,12 @@ namespace TCP_Server
             else
             {
                 IsBegin = false;
-                Socket m_sendSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Socket tempSocket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 IPEndPoint tempPort = new(IPAddress.Parse("127.0.0.1"), int.Parse(portEditor.Text));
-                m_sendSocket.Connect(tempPort);
                 m_isFromLocal = true;
-                foreach (Socket item in sendSockets_)
-                {
-                    byte[] buffer = new byte[1];
-                    buffer[0] = 3;
-                    item.Send(buffer);
-                    item.Close();
-                }
-                sendSockets_.Clear();
+                byte[] buffer = new byte[1];
+                buffer[0] = 3;
+                tempSocket.SendTo(buffer, tempPort);
                 IPCombo.Items.Clear();
                 beginButton.Text = "开始监听";
                 ShowLog($"停止监听：{port}。");
@@ -175,33 +149,11 @@ namespace TCP_Server
         }
         private void Disconnect(object sender, EventArgs e)
         {
-            if (sendSockets_.Count == 0)
+            if (IPCombo.Items.Count != 0)
             {
-                return;
+                IPCombo.SelectedIndex--;
             }
-            byte[] buffer = new byte[1];
-            buffer[0] = 3;
-            int index = IPCombo.SelectedIndex;
-            sendSockets_[index].Send(buffer);
-            IPCombo.Items.RemoveAt(index);
-            ShowLog(sendSockets_[index].LocalEndPoint + "：断开连接");
-            sendSockets_[index].Close();
-            sendSockets_.RemoveAt(index);
-            IPCombo.SelectedIndex = index - 1;
-            if (IPCombo.SelectedIndex == -1 && IPCombo.Items.Count != 0)
-            {
-                IPCombo.SelectedIndex = 0;
-            }
-        }
-        private new void Closing(object sender, FormClosingEventArgs e)
-        {
-            foreach (Socket item in sendSockets_)
-            {
-                byte[] buffer = new byte[1];
-                buffer[0] = 3;
-                item.Send(buffer);
-                item.Close();
-            }
+            IPCombo.Items.RemoveAt(IPCombo.SelectedIndex + 1);
         }
     }
 }

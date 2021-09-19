@@ -1,5 +1,5 @@
 ﻿
-namespace TCP_Client
+namespace UDP_Client
 {
     partial class MainForm
     {
@@ -30,16 +30,55 @@ namespace TCP_Client
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            this.fileButton = new System.Windows.Forms.Button();
+            this.selectButton = new System.Windows.Forms.Button();
+            this.directoryEditor = new System.Windows.Forms.TextBox();
             this.messageEditor = new System.Windows.Forms.TextBox();
             this.logEditor = new System.Windows.Forms.TextBox();
             this.portEditor = new System.Windows.Forms.TextBox();
             this.IPEditor = new System.Windows.Forms.TextBox();
             this.sendButton = new System.Windows.Forms.Button();
             this.connectButton = new System.Windows.Forms.Button();
-            this.fileButton = new System.Windows.Forms.Button();
-            this.selectButton = new System.Windows.Forms.Button();
-            this.directoryEditor = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
+            // 
+            // fileButton
+            // 
+            this.fileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.fileButton.AutoSize = true;
+            this.fileButton.Enabled = false;
+            this.fileButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.fileButton.Location = new System.Drawing.Point(841, 460);
+            this.fileButton.Name = "fileButton";
+            this.fileButton.Size = new System.Drawing.Size(91, 31);
+            this.fileButton.TabIndex = 18;
+            this.fileButton.Text = "发送文件";
+            this.fileButton.UseVisualStyleBackColor = true;
+            this.fileButton.Click += new System.EventHandler(this.SendFile);
+            // 
+            // selectButton
+            // 
+            this.selectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.selectButton.AutoSize = true;
+            this.selectButton.Enabled = false;
+            this.selectButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.selectButton.Location = new System.Drawing.Point(745, 460);
+            this.selectButton.Name = "selectButton";
+            this.selectButton.Size = new System.Drawing.Size(90, 31);
+            this.selectButton.TabIndex = 17;
+            this.selectButton.Text = "选择";
+            this.selectButton.UseVisualStyleBackColor = true;
+            this.selectButton.Click += new System.EventHandler(this.SelectFiles);
+            // 
+            // directoryEditor
+            // 
+            this.directoryEditor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.directoryEditor.Enabled = false;
+            this.directoryEditor.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.directoryEditor.Location = new System.Drawing.Point(12, 460);
+            this.directoryEditor.Name = "directoryEditor";
+            this.directoryEditor.Size = new System.Drawing.Size(727, 29);
+            this.directoryEditor.TabIndex = 16;
             // 
             // messageEditor
             // 
@@ -52,7 +91,7 @@ namespace TCP_Client
             this.messageEditor.Name = "messageEditor";
             this.messageEditor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.messageEditor.Size = new System.Drawing.Size(920, 151);
-            this.messageEditor.TabIndex = 5;
+            this.messageEditor.TabIndex = 14;
             this.messageEditor.WordWrap = false;
             // 
             // logEditor
@@ -67,7 +106,7 @@ namespace TCP_Client
             this.logEditor.ReadOnly = true;
             this.logEditor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.logEditor.Size = new System.Drawing.Size(920, 213);
-            this.logEditor.TabIndex = 4;
+            this.logEditor.TabIndex = 13;
             this.logEditor.WordWrap = false;
             // 
             // portEditor
@@ -76,7 +115,7 @@ namespace TCP_Client
             this.portEditor.Location = new System.Drawing.Point(159, 12);
             this.portEditor.Name = "portEditor";
             this.portEditor.Size = new System.Drawing.Size(63, 29);
-            this.portEditor.TabIndex = 1;
+            this.portEditor.TabIndex = 11;
             // 
             // IPEditor
             // 
@@ -84,7 +123,7 @@ namespace TCP_Client
             this.IPEditor.Location = new System.Drawing.Point(12, 12);
             this.IPEditor.Name = "IPEditor";
             this.IPEditor.Size = new System.Drawing.Size(141, 29);
-            this.IPEditor.TabIndex = 0;
+            this.IPEditor.TabIndex = 10;
             // 
             // sendButton
             // 
@@ -95,7 +134,7 @@ namespace TCP_Client
             this.sendButton.Location = new System.Drawing.Point(841, 423);
             this.sendButton.Name = "sendButton";
             this.sendButton.Size = new System.Drawing.Size(91, 31);
-            this.sendButton.TabIndex = 6;
+            this.sendButton.TabIndex = 15;
             this.sendButton.Text = "发送消息";
             this.sendButton.UseVisualStyleBackColor = true;
             this.sendButton.Click += new System.EventHandler(this.SendMessage);
@@ -107,49 +146,10 @@ namespace TCP_Client
             this.connectButton.Location = new System.Drawing.Point(228, 10);
             this.connectButton.Name = "connectButton";
             this.connectButton.Size = new System.Drawing.Size(91, 31);
-            this.connectButton.TabIndex = 2;
+            this.connectButton.TabIndex = 12;
             this.connectButton.Text = "连接";
             this.connectButton.UseVisualStyleBackColor = true;
             this.connectButton.Click += new System.EventHandler(this.ChangeConnectStatus);
-            // 
-            // fileButton
-            // 
-            this.fileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.fileButton.AutoSize = true;
-            this.fileButton.Enabled = false;
-            this.fileButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.fileButton.Location = new System.Drawing.Point(841, 460);
-            this.fileButton.Name = "fileButton";
-            this.fileButton.Size = new System.Drawing.Size(91, 31);
-            this.fileButton.TabIndex = 9;
-            this.fileButton.Text = "发送文件";
-            this.fileButton.UseVisualStyleBackColor = true;
-            this.fileButton.Click += new System.EventHandler(this.SendFile);
-            // 
-            // selectButton
-            // 
-            this.selectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.selectButton.AutoSize = true;
-            this.selectButton.Enabled = false;
-            this.selectButton.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.selectButton.Location = new System.Drawing.Point(745, 460);
-            this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(90, 31);
-            this.selectButton.TabIndex = 8;
-            this.selectButton.Text = "选择";
-            this.selectButton.UseVisualStyleBackColor = true;
-            this.selectButton.Click += new System.EventHandler(this.SelectFile);
-            // 
-            // directoryEditor
-            // 
-            this.directoryEditor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.directoryEditor.Enabled = false;
-            this.directoryEditor.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.directoryEditor.Location = new System.Drawing.Point(12, 460);
-            this.directoryEditor.Name = "directoryEditor";
-            this.directoryEditor.Size = new System.Drawing.Size(727, 29);
-            this.directoryEditor.TabIndex = 7;
             // 
             // MainForm
             // 
@@ -167,12 +167,10 @@ namespace TCP_Client
             this.Controls.Add(this.IPEditor);
             this.Controls.Add(this.sendButton);
             this.Controls.Add(this.connectButton);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "客户端";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClosingForm);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -180,15 +178,15 @@ namespace TCP_Client
 
         #endregion
 
+        private System.Windows.Forms.Button fileButton;
+        private System.Windows.Forms.Button selectButton;
+        private System.Windows.Forms.TextBox directoryEditor;
         private System.Windows.Forms.TextBox messageEditor;
         private System.Windows.Forms.TextBox logEditor;
         private System.Windows.Forms.TextBox portEditor;
         private System.Windows.Forms.TextBox IPEditor;
         private System.Windows.Forms.Button sendButton;
         private System.Windows.Forms.Button connectButton;
-        private System.Windows.Forms.Button fileButton;
-        private System.Windows.Forms.Button selectButton;
-        private System.Windows.Forms.TextBox directoryEditor;
     }
 }
 

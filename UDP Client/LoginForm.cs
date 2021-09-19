@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-namespace TCP_Client
+namespace UDP_Client
 {
     public partial class LoginForm : Form
     {

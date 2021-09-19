@@ -6,11 +6,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-namespace TCP_Client
+namespace UDP_Client
 {
     public partial class MainForm : Form
     {
-        private static Socket m_sendSocket;
+        private static Socket m_socket;
+        private static IPEndPoint m_farPort;
         public bool IsConnected { get; set; }
         public static bool IsLogin { get; set; }
         public MainForm()
@@ -26,8 +27,9 @@ namespace TCP_Client
             List<byte> list = new();
             list.Add(2);
             list.AddRange(buffer);
-            m_sendSocket.Send(list.ToArray());
-            _ = m_sendSocket.Receive(buffer);
+            m_socket.SendTo(list.ToArray(), m_farPort);
+            EndPoint temp = new IPEndPoint(IPAddress.Any, 0);
+            _ = m_socket.ReceiveFrom(buffer, ref temp);
             if (buffer[1] == 0)
             {
                 return false;
@@ -60,18 +62,26 @@ namespace TCP_Client
                 try
                 {
                     byte[] buffer = new byte[1024 * 1024];
-                    size = m_sendSocket.Receive(buffer);
+                    EndPoint point = new IPEndPoint(IPAddress.Any, 0);
+                    size = m_socket.ReceiveFrom(buffer, ref point);
                     switch (buffer[0])
                     {
                         case 0:
-                            ShowLog(m_sendSocket.RemoteEndPoint + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
+                            ShowLog(point + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
                             break;
                         case 3:
                             IsLogin = false;
                             connectButton.Text = "连接";
-                            ChangeStatus();
-                            ShowLog(m_sendSocket.RemoteEndPoint + "：断开连接。");
-                            break;
+                            IsConnected = false;
+                            IPEditor.ReadOnly = false;
+                            portEditor.ReadOnly = false;
+                            messageEditor.Enabled = false;
+                            sendButton.Enabled = false;
+                            fileButton.Enabled = false;
+                            selectButton.Enabled = false;
+                            directoryEditor.Enabled = false;
+                            ShowLog(point + "：断开连接。");
+                            return;
                         default:
                             break;
                     }
@@ -80,18 +90,17 @@ namespace TCP_Client
                 {
                     size = 1;
                 }
-            } while (size != 1 && IsConnected && m_sendSocket.Connected);
+            } while (size != 1 && IsConnected);
         }
         private void ChangeConnectStatus(object sender, EventArgs e)
         {
             if (!IsConnected)
             {
-                m_sendSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPEndPoint port;
+                m_socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 try
                 {
                     IPAddress ip = IPAddress.Parse(IPEditor.Text);
-                    port = new(ip, int.Parse(portEditor.Text));
+                    m_farPort = new(ip, int.Parse(portEditor.Text));
                 }
                 catch
                 {
@@ -102,21 +111,17 @@ namespace TCP_Client
                 }
                 try
                 {
-                    m_sendSocket.Connect(port);
                     LoginForm loginForm = new();
                     loginForm.ShowDialog();
                     if (!IsLogin)
                     {
-                        byte[] buffer = new byte[1];
-                        buffer[0] = 3;
-                        m_sendSocket.Send(buffer);
                         return;
                     }
                     Thread thread = new(Receive);
                     thread.IsBackground = true;
                     thread.Start();
                     connectButton.Text = "断开连接";
-                    ShowLog($"连接成功：{port}。");
+                    ShowLog($"连接成功：{m_farPort}。");
                 }
                 catch (Exception error)
                 {
@@ -136,14 +141,7 @@ namespace TCP_Client
             }
             else
             {
-                IsLogin = false;
-                byte[] buffer = new byte[1];
-                buffer[0] = 3;
-                m_sendSocket.Send(buffer);
-                ShowLog(m_sendSocket.LocalEndPoint + "：断开连接。");
-                connectButton.Text = "连接";
-                m_sendSocket.Close();
-                ChangeStatus();
+                Close();
             }
         }
         private void SendMessage(object sender, EventArgs e)
@@ -154,25 +152,12 @@ namespace TCP_Client
                 List<byte> list = new();
                 list.Add(0);
                 list.AddRange(buffer);
-                m_sendSocket.Send(list.ToArray());
-                ShowLog(m_sendSocket.LocalEndPoint + "：" + messageEditor.Text);
+                m_socket.SendTo(list.ToArray(), m_farPort);
+                ShowLog(m_socket.LocalEndPoint + "：" + messageEditor.Text);
                 messageEditor.Clear();
             }
         }
-        private void ClosingForm(object sender, FormClosingEventArgs e)
-        {
-            if (IsConnected)
-            {
-                byte[] buffer = new byte[1];
-                buffer[0] = 3;
-                m_sendSocket.Send(buffer);
-                IsConnected = false;
-                ShowLog(m_sendSocket.LocalEndPoint + "：断开连接。");
-                m_sendSocket.Close();
-            }
-        }
-
-        private void SelectFile(object sender, EventArgs e)
+        private void SelectFiles(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new();
             dialog.Title = "打开文件";
@@ -189,8 +174,8 @@ namespace TCP_Client
             List<byte> list = new();
             list.Add(1);
             list.AddRange(buffer);
-            m_sendSocket.Send(list.ToArray(), 0, size + 1, SocketFlags.None);
-            ShowLog(m_sendSocket.LocalEndPoint + "：发送文件“" + directoryEditor.Text + "”。");
+            m_socket.SendTo(list.ToArray(), 0, size + 1, SocketFlags.None, m_farPort);
+            ShowLog(m_socket.LocalEndPoint + "：发送文件“" + directoryEditor.Text + "”。");
             directoryEditor.Clear();
         }
     }
