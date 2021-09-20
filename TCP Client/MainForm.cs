@@ -171,7 +171,6 @@ namespace TCP_Client
                 m_sendSocket.Close();
             }
         }
-
         private void SelectFile(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new();
