@@ -105,9 +105,11 @@ namespace UDP_Client
             // 
             // LoginForm
             // 
+            this.AcceptButton = this.loginButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
+            this.CancelButton = this.cancelButton;
             this.ClientSize = new System.Drawing.Size(464, 231);
             this.Controls.Add(this.userText);
             this.Controls.Add(this.passwordText);

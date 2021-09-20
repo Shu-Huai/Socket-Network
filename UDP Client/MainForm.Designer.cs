@@ -93,6 +93,7 @@ namespace UDP_Client
             this.messageEditor.Size = new System.Drawing.Size(920, 151);
             this.messageEditor.TabIndex = 14;
             this.messageEditor.WordWrap = false;
+            this.messageEditor.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NewLine);
             // 
             // logEditor
             // 
@@ -171,6 +172,7 @@ namespace UDP_Client
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "客户端";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

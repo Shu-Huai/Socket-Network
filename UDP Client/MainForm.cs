@@ -29,30 +29,30 @@ namespace UDP_Client
             list.AddRange(buffer);
             m_socket.SendTo(list.ToArray(), m_farPort);
             EndPoint temp = new IPEndPoint(IPAddress.Any, 0);
-            _ = m_socket.ReceiveFrom(buffer, ref temp);
-            if (buffer[1] == 0)
+            try
+            {
+                _ = m_socket.ReceiveFrom(buffer, ref temp);
+            }
+            catch
             {
                 return false;
             }
-            else
-            {
-                return true;
-            }
+            return buffer[1] != 0;
         }
         private void ShowLog(string log)
         {
             logEditor.AppendText(log + Environment.NewLine);
         }
-        private void ChangeStatus()
+        private void SetStatus(bool status)
         {
-            IsConnected = !IsConnected;
-            IPEditor.ReadOnly = !IPEditor.ReadOnly;
-            portEditor.ReadOnly = !portEditor.ReadOnly;
-            messageEditor.Enabled = !messageEditor.Enabled;
-            sendButton.Enabled = !sendButton.Enabled;
-            fileButton.Enabled = !fileButton.Enabled;
-            selectButton.Enabled = !selectButton.Enabled;
-            directoryEditor.Enabled = !directoryEditor.Enabled;
+            IsConnected = status;
+            IPEditor.ReadOnly = status;
+            portEditor.ReadOnly = status;
+            messageEditor.Enabled = status;
+            sendButton.Enabled = status;
+            fileButton.Enabled = status;
+            selectButton.Enabled = status;
+            directoryEditor.Enabled = status;
         }
         private void Receive()
         {
@@ -62,25 +62,18 @@ namespace UDP_Client
                 try
                 {
                     byte[] buffer = new byte[1024 * 1024];
-                    EndPoint point = new IPEndPoint(IPAddress.Any, 0);
-                    size = m_socket.ReceiveFrom(buffer, ref point);
+                    EndPoint port = new IPEndPoint(IPAddress.Any, 0);
+                    size = m_socket.ReceiveFrom(buffer, ref port);
                     switch (buffer[0])
                     {
                         case 0:
-                            ShowLog(point + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
+                            ShowLog(port + "：" + Encoding.Default.GetString(buffer, 1, size - 1));
                             break;
                         case 3:
                             IsLogin = false;
                             connectButton.Text = "连接";
-                            IsConnected = false;
-                            IPEditor.ReadOnly = false;
-                            portEditor.ReadOnly = false;
-                            messageEditor.Enabled = false;
-                            sendButton.Enabled = false;
-                            fileButton.Enabled = false;
-                            selectButton.Enabled = false;
-                            directoryEditor.Enabled = false;
-                            ShowLog(point + "：断开连接。");
+                            SetStatus(false);
+                            ShowLog(port + "：断开连接。");
                             return;
                         default:
                             break;
@@ -88,9 +81,9 @@ namespace UDP_Client
                 }
                 catch
                 {
-                    size = 1;
+                    return;
                 }
-            } while (size != 1 && IsConnected);
+            } while (IsConnected);
         }
         private void ChangeConnectStatus(object sender, EventArgs e)
         {
@@ -120,28 +113,26 @@ namespace UDP_Client
                     Thread thread = new(Receive);
                     thread.IsBackground = true;
                     thread.Start();
+                    SetStatus(true);
                     connectButton.Text = "断开连接";
                     ShowLog($"连接成功：{m_farPort}。");
                 }
                 catch (Exception error)
                 {
                     ShowLog($"出现异常：{error}。");
-                    IsConnected = true;
-                    IPEditor.ReadOnly = true;
-                    portEditor.ReadOnly = true;
-                    messageEditor.Enabled = true;
-                    sendButton.Enabled = true;
-                    fileButton.Enabled = true;
-                    selectButton.Enabled = true;
-                    directoryEditor.Enabled = true;
                 }
                 AcceptButton = null;
-                ChangeStatus();
                 _ = messageEditor.Focus();
             }
             else
             {
-                Close();
+                IsLogin = false;
+                connectButton.Text = "连接";
+                SetStatus(false);
+                byte[] buffer = new byte[1];
+                buffer[0] = 3;
+                m_socket.SendTo(buffer, m_farPort);
+                m_socket.Dispose();
             }
         }
         private void SendMessage(object sender, EventArgs e)
@@ -177,6 +168,23 @@ namespace UDP_Client
             m_socket.SendTo(list.ToArray(), 0, size + 1, SocketFlags.None, m_farPort);
             ShowLog(m_socket.LocalEndPoint + "：发送文件“" + directoryEditor.Text + "”。");
             directoryEditor.Clear();
+        }
+        private void NewLine(object sender, KeyEventArgs e)
+        {
+            if (e.Modifiers == Keys.Shift && e.KeyCode == Keys.Enter)
+            {
+                messageEditor.Text += Environment.NewLine;
+            }
+        }
+        private new void Closing(object sender, FormClosingEventArgs e)
+        {
+            if (IsConnected)
+            {
+                byte[] buffer = new byte[1];
+                buffer[0] = 3;
+                m_socket.SendTo(buffer, m_farPort);
+                m_socket.Dispose();
+            }
         }
     }
 }

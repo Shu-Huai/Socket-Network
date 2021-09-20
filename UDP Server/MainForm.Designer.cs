@@ -124,6 +124,7 @@ namespace UDP_Server
             // 
             // MainForm
             // 
+            this.AcceptButton = this.beginButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
@@ -139,6 +140,7 @@ namespace UDP_Server
             this.MinimumSize = new System.Drawing.Size(960, 540);
             this.Name = "MainForm";
             this.Text = "服务端";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

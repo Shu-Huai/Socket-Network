@@ -13,14 +13,12 @@ namespace UDP_Server
     {
         public bool IsBegin { get; set; }
         private bool m_isFromLocal;
-        private readonly List<Socket> sendSockets_;
         private Socket m_socket;
         public MainForm()
         {
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
             IsBegin = false;
-            sendSockets_ = new();
         }
         private void ShowLog(string log)
         {
@@ -39,10 +37,7 @@ namespace UDP_Server
                     switch (buffer[0])
                     {
                         case 0:
-                            if (!m_isFromLocal)
-                            {
-                                ShowLog(point + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
-                            }
+                            ShowLog(point + "：" + (size == 0 ? "断开连接。" : Encoding.Default.GetString(buffer, 1, size - 1)));
                             break;
                         case 1:
                             SaveFileDialog dialog = new();
@@ -75,16 +70,13 @@ namespace UDP_Server
                             m_socket.SendTo(information, point);
                             break;
                         case 3:
-                            if (!m_isFromLocal)
+                            ShowLog(point + "：断开连接。");
+                            if (IPCombo.Items.Count != 0 && IPCombo.SelectedItem.ToString() == point.ToString())
                             {
-                                ShowLog(point + "：断开连接。");
-                                if (IPCombo.Items.Count != 0 && IPCombo.SelectedItem.ToString() == point.ToString())
-                                {
-                                    IPCombo.SelectedIndex--;
-                                }
-                                IPCombo.Items.Remove(point.ToString());
+                                IPCombo.SelectedIndex--;
                             }
-                            return;
+                            IPCombo.Items.Remove(point.ToString());
+                            break;
                         default:
                             break;
                     }
@@ -131,12 +123,14 @@ namespace UDP_Server
             else
             {
                 IsBegin = false;
-                Socket tempSocket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                IPEndPoint tempPort = new(IPAddress.Parse("127.0.0.1"), int.Parse(portEditor.Text));
-                m_isFromLocal = true;
-                byte[] buffer = new byte[1];
-                buffer[0] = 3;
-                tempSocket.SendTo(buffer, tempPort);
+                foreach (string item in IPCombo.Items)
+                {
+                    IPEndPoint tempPort = new(IPAddress.Parse(item.Split(":")[0]), int.Parse(item.Split(":")[1]));
+                    byte[] buffer = new byte[1];
+                    buffer[0] = 3;
+                    m_socket.SendTo(buffer, tempPort);
+                }
+                m_socket.Dispose();
                 IPCombo.Items.Clear();
                 beginButton.Text = "开始监听";
                 ShowLog($"停止监听：{port}。");
@@ -151,9 +145,27 @@ namespace UDP_Server
         {
             if (IPCombo.Items.Count != 0)
             {
-                IPCombo.SelectedIndex--;
+                Socket tempSocket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                IPEndPoint tempPort = new(IPAddress.Parse(IPCombo.SelectedItem.ToString().Split(":")[0]), int.Parse(IPCombo.SelectedItem.ToString().Split(":")[1]));
+                byte[] buffer = new byte[1];
+                buffer[0] = 3;
+                tempSocket.SendTo(buffer, tempPort);
+                IPCombo.Items.RemoveAt(IPCombo.SelectedIndex--);
             }
-            IPCombo.Items.RemoveAt(IPCombo.SelectedIndex + 1);
+        }
+        private new void Closing(object sender, FormClosingEventArgs e)
+        {
+            if (IsBegin)
+            {
+                foreach (string item in IPCombo.Items)
+                {
+                    IPEndPoint tempPort = new(IPAddress.Parse(item.Split(":")[0]), int.Parse(item.Split(":")[1]));
+                    byte[] buffer = new byte[1];
+                    buffer[0] = 3;
+                    m_socket.SendTo(buffer, tempPort);
+                }
+                m_socket.Dispose();
+            }
         }
     }
 }
